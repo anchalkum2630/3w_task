@@ -4,10 +4,14 @@ import multer from 'multer';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import fs from 'fs';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Initialize Express app
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -15,14 +19,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Create an uploads directory if it doesn't exist
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
 }
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Directory where files will be saved
+    cb(null, uploadDir); // Directory where files will be saved
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -32,12 +37,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Create MySQL connection
+// Create MySQL connection using environment variables
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root', // Replace with your MySQL username
-  password: 'password', // Replace with your MySQL password
-  database: 'user_uploads', // Name of the database
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 // Connect to MySQL
